@@ -25,6 +25,6 @@ export default async function Home(){
    </div>
   </div>
   <section className="card" style={{marginTop:16}}><div className="section-title"><h2>Top opportunities</h2><span>sorted by commercial score</span></div><OpportunityTable opportunities={opportunities.slice(0,12)}/></section>
-  <section id="integrations" style={{marginTop:16}}><div className="section-title"><h2>Integration fabric</h2><span>plugin-owned capabilities behind one UI</span></div><div className="grid integration-grid">{integrations.map(i=><div className="card integration" key={i.id}><div className="state">{i.state}</div><h3>{i.name}</h3><p>{i.purpose}</p><ul>{i.autonomousActions.map(x=><li key={x}>{x}</li>)}</ul></div>)}</section>
+  <section id="integrations" style={{marginTop:16}}><div className="section-title"><h2>Integration fabric</h2><span>plugin-owned capabilities behind one UI</span></div><div className="grid integration-grid">{integrations.map(i=><div className="card integration" key={i.id}><div className="state">{i.state}</div><h3>{i.name}</h3><p>{i.purpose}</p><ul>{i.autonomousActions.map(x=><li key={x}>{x}</li>)}</ul></div>)}</div></section>
  </>;
 }
