@@ -5,6 +5,7 @@ create type autonomy_level as enum ('green','amber','red');
 
 create table if not exists opportunities (
   id uuid primary key default gen_random_uuid(),
+  source_key text unique,
   title text not null,
   niche text not null,
   source text not null,
@@ -20,6 +21,7 @@ create table if not exists opportunities (
   traffic_30d int default 0,
   conversion_rate numeric(6,3) default 0,
   next_action text,
+  provider_payload jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -71,7 +73,14 @@ create table if not exists system_events (
   created_at timestamptz not null default now()
 );
 
+alter table opportunities enable row level security;
+alter table agent_runs enable row level security;
+alter table assets enable row level security;
+alter table revenue_events enable row level security;
+alter table system_events enable row level security;
+
 create index if not exists opportunities_score_idx on opportunities(score desc);
 create index if not exists opportunities_status_idx on opportunities(status);
+create index if not exists opportunities_source_key_idx on opportunities(source_key);
 create index if not exists agent_runs_created_idx on agent_runs(created_at desc);
 create index if not exists revenue_events_occurred_idx on revenue_events(occurred_at desc);
