@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Bot, CircleDollarSign, LayoutDashboard, Lightbulb, PlugZap } from "lucide-react";
+import { Bot, BrainCircuit, CircleDollarSign, Factory, LayoutDashboard, Lightbulb, PlugZap } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import "./globals.css";
 
@@ -9,6 +9,8 @@ export const metadata: Metadata = { title: "Money Engine", description: "Autonom
 const nav: Array<[string, string, LucideIcon]> = [
   ["/", "Command", LayoutDashboard],
   ["/opportunities", "Opportunities", Lightbulb],
+  ["/skills", "Skills", BrainCircuit],
+  ["/factory", "Factory", Factory],
   ["/agents", "Agents", Bot],
   ["/revenue", "Revenue", CircleDollarSign],
   ["/#integrations", "Integrations", PlugZap],
