@@ -11,6 +11,8 @@ const workers=[
  ["scout","Scout","Demand discovery","green"],["curator","Curator","Skill maintenance","green"],["judge","Judge","Commercial validation","green"],["forge","Forge","Offer + asset production","amber"],["distribution","Distribution","Campaign production","amber"],["ledger","Ledger","Revenue learning","green"]
 ] as const;
 
+function londonDate(value:Date){return new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/London",year:"numeric",month:"2-digit",day:"2-digit"}).format(value);}
+
 export default async function Home(){
  const db=getServerSupabase();
  const [opportunities,ops,briefResult,campaignResult,revenueResult,runResult] = await Promise.all([
@@ -23,8 +25,9 @@ export default async function Home(){
  const briefs=(briefResult as any).data||[]; const campaigns=(campaignResult as any).data||[]; const revenue=(revenueResult as any).data||[]; const runs=(runResult as any).data||[];
  const counts = opportunities.reduce<Record<string,number>>((a,o)=>(a[o.status]=(a[o.status]||0)+1,a),{});
  const needsReview = opportunities.filter(o=>o.status==="scored" && o.score>=70).length;
- const todayLondon=new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/London",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date());
- const revenueToday=revenue.filter((r:any)=>new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/London",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date(r.occurred_at))===todayLondon).reduce((s:number,r:any)=>s+Number(r.net_gbp||0),0);
+ const todayLondon=londonDate(new Date());
+ const revenueToday=revenue.filter((r:any)=>londonDate(new Date(r.occurred_at))===todayLondon).reduce((s:number,r:any)=>s+Number(r.net_gbp||0),0);
+ const chartData=Array.from({length:7},(_,i)=>{const d=new Date();d.setDate(d.getDate()-(6-i));const key=londonDate(d);const value=revenue.filter((r:any)=>londonDate(new Date(r.occurred_at))===key).reduce((s:number,r:any)=>s+Number(r.net_gbp||0),0);return {day:d.toLocaleDateString("en-GB",{weekday:"short",timeZone:"Europe/London"}),revenue:Number(value.toFixed(2))};});
  const readyAssets=briefs.filter((b:any)=>b.status==="ready").length;
  const plannedCampaigns=campaigns.filter((c:any)=>c.status==="planned").length;
  const fmt=(value:string|null)=>value?new Date(value).toLocaleString("en-GB",{dateStyle:"medium",timeStyle:"short",timeZone:"Europe/London"}):"No activity yet";
@@ -50,7 +53,7 @@ export default async function Home(){
   <div className="grid two-col">
    <div className="grid">
     <section className="card"><div className="section-title"><h2>Opportunity pipeline</h2><span>Judge gates active</span></div><div className="pipeline">{["discovered","scored","approved","production","published"].map(s=><div className="pipe" key={s}><strong>{counts[s]||0}</strong><small>{s}</small></div>)}</div><div className="meta" style={{marginTop:10}}>{counts.paused||0} held by Judge for revalidation.</div></section>
-    <section className="card"><div className="section-title"><h2>Revenue pulse</h2><span>{revenue.length?"Stripe ledger data":"awaiting first verified sale"}</span></div><RevenueChart/></section>
+    <section className="card"><div className="section-title"><h2>Revenue pulse</h2><span>{revenue.length?"Stripe ledger data":"awaiting first verified sale"}</span></div><RevenueChart data={chartData}/></section>
    </div>
    <div className="grid">
     <section className="card"><div className="section-title"><h2>Agents</h2><Link href="/agents">live registry →</Link></div><div className="agent-list">{workers.map(([id,name,role,autonomy])=>{const r=latestRun(id);return <div className="agent" key={id}><div><div className="agent-name">{name}</div><div className="agent-role">{role}</div></div><div style={{textAlign:"right"}}><span className="status"><span className={`dot ${r?"idle":"attention"}`}></span>{r?"idle":"waiting"}</span><div className={`autonomy ${autonomy}`} style={{marginTop:5}}>{autonomy}</div></div></div>})}</div></section>
