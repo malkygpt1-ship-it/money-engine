@@ -1,5 +1,6 @@
 import { getServerSupabase } from "@/lib/server-supabase";
 import { ensureStripePaymentLinks, reconcileStripePayments } from "@/lib/stripe-commerce";
+import { reconcileStripeFees } from "@/lib/stripe-fee-reconcile";
 
 async function writeEvent(type:string,payload:Record<string,unknown>){
  const db=getServerSupabase(); if(!db) return;
@@ -12,7 +13,8 @@ export async function runStripeWorker(){
  try{
   const catalogue=await ensureStripePaymentLinks();
   const reconciliation=await reconcileStripePayments();
-  const output={catalogue,reconciliation};
+  const fees=await reconcileStripeFees();
+  const output={catalogue,reconciliation,fees};
   await db.from("agent_runs").insert({agent_id:"payments",opportunity_id:null,autonomy:"green",action:"stripe_catalogue_and_reconciliation",status:"completed",output});
   await writeEvent("agent.completed",{agent:"payments",...output});
   return output;
