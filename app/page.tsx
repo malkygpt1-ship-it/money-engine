@@ -2,10 +2,13 @@ import Link from "next/link";
 import { KPI } from "@/components/kpi";
 import { OpportunityTable } from "@/components/opportunity-table";
 import { RevenueChart } from "@/components/revenue-chart";
+import { RunWorkerButton } from "@/components/run-worker-button";
 import { integrations } from "@/lib/integrations";
 import { listOpportunities } from "@/lib/opportunity-store";
 import { getServerSupabase, hasPersistentStore } from "@/lib/server-supabase";
 import { getOpsStatus } from "@/lib/ops-status";
+
+export const maxDuration=60;
 
 const workers=[
  ["scout","Scout","Demand discovery","green"],["curator","Curator","Skill maintenance","green"],["judge","Judge","Commercial validation","green"],["forge","Forge","Offer + asset production","amber"],["distribution","Distribution","Campaign production","amber"],["ledger","Ledger","Revenue learning","green"]
@@ -33,7 +36,7 @@ export default async function Home(){
  const fmt=(value:string|null)=>value?new Date(value).toLocaleString("en-GB",{dateStyle:"medium",timeStyle:"short",timeZone:"Europe/London"}):"No activity yet";
  const latestRun=(id:string)=>runs.find((r:any)=>r.agent_id===id);
  return <>
-  <div className="topbar"><div><div className="eyebrow">Autonomous business OS</div><h1>Command centre</h1><div className="sub">Discover demand → validate → build → distribute → monetise → learn.</div></div><div className="badge">{hasPersistentStore()?"Persistent engine online":"Demo mode · database not connected"}</div></div>
+  <div className="topbar"><div><div className="eyebrow">Autonomous business OS</div><h1>Command centre</h1><div className="sub">Discover demand → validate → build → distribute → monetise → learn.</div></div><div style={{display:"flex",gap:10,alignItems:"center",flexWrap:"wrap"}}><RunWorkerButton/><div className="badge">{hasPersistentStore()?"Persistent engine online":"Demo mode · database not connected"}</div></div></div>
   <section className="ops-strip">
     <div><small>System</small><strong className={ops.system==="LIVE"?"ok":"warn"}>{ops.system}</strong></div>
     <div><small>Served deploy</small><strong className="ok">{ops.deployment}</strong></div>
