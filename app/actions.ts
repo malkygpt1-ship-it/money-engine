@@ -6,8 +6,7 @@ import { runStripeWorker } from "@/lib/stripe-worker";
 
 export async function runWorkerNow(){
   if(!process.env.CRON_SECRET) throw new Error("CRON_SECRET is not configured");
-  const engine=await runEngine();
-  const stripe=await runStripeWorker();
+  await runEngine();
+  await runStripeWorker();
   revalidatePath("/");
-  return {engine,stripe};
 }
