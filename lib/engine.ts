@@ -14,6 +14,13 @@ async function runLog(agent:string, action:string, opportunityId:string|null, ou
   await db.from("agent_runs").insert({agent_id:agent,opportunity_id:opportunityId,autonomy:agent==="forge"||agent==="distribution"?"amber":"green",action,status:"completed",output});
 }
 
+function independentProductEligible(o:any){
+  const text=`${o.title||""} ${o.niche||""}`.toLowerCase();
+  const positive=["business","finance","budget","productivity","spreadsheet","template","planner","calculator","career","freelance","consult","education","study","marketing","seo","workflow","project management","operations","sales"];
+  const protectedRisk=["creator","celebrity","movie","film","television","music","artist","gaming","roblox","game","sports","football","politics","news","trailer","episode","reaction"];
+  return positive.some(k=>text.includes(k)) && !protectedRisk.some(k=>text.includes(k));
+}
+
 export async function runJudge(){
   const db=getServerSupabase(); if(!db) throw new Error("Database unavailable");
   await event("agent.started",{agent:"judge"},"agent","judge");
@@ -24,10 +31,12 @@ export async function runJudge(){
     const durablePenalty=(o.provider_payload?.growth_pct||0)>4000?7:0;
     const commercial=Math.max(0,Math.min(100,Number(o.commercial_intent||0)));
     const adjusted=Math.round(Number(o.score||0)*0.55+commercial*0.3+(100-Number(o.competition||0))*0.15-durablePenalty);
-    const pass=adjusted>=63 && commercial>=45;
-    await db.from("opportunities").update({score:adjusted,status:pass?"approved":"paused",next_action:pass?"Forge product brief":"Hold / revalidate demand",updated_at:new Date().toISOString()}).eq("id",o.id);
-    await runLog("judge","commercial_validation",o.id,{adjustedScore:adjusted,decision:pass?"approved":"held",durablePenalty});
-    await event(pass?"judge.approved":"judge.held",{title:o.title,score:adjusted},"opportunity",o.id);
+    const eligible=independentProductEligible(o);
+    const pass=adjusted>=63 && commercial>=45 && eligible;
+    const holdReason=!eligible?"Hold: no safe independent digital-product angle":adjusted<63?"Hold: commercial score below threshold":"Hold: weak commercial intent";
+    await db.from("opportunities").update({score:adjusted,status:pass?"approved":"paused",next_action:pass?"Forge product brief":holdReason,updated_at:new Date().toISOString()}).eq("id",o.id);
+    await runLog("judge","commercial_validation",o.id,{adjustedScore:adjusted,decision:pass?"approved":"held",durablePenalty,independentProductEligible:eligible});
+    await event(pass?"judge.approved":"judge.held",{title:o.title,score:adjusted,eligible,reason:pass?null:holdReason},"opportunity",o.id);
     pass?approved++:held++;
   }
   await event("agent.completed",{agent:"judge",approved,held},"agent","judge");
@@ -36,10 +45,10 @@ export async function runJudge(){
 
 function forgeOffer(title:string,niche:string,score:number){
   const lower=`${title} ${niche}`.toLowerCase();
-  const type=lower.includes("game")||lower.includes("roblox")?"resource_pack":lower.includes("business")||lower.includes("consult")?"toolkit":"digital_guide";
+  const type=lower.includes("spreadsheet")||lower.includes("budget")?"template_pack":lower.includes("business")||lower.includes("consult")?"toolkit":"digital_guide";
   const price=score>=80?12:score>=70?9:7;
   const name=title.replace(/\b\w/g,c=>c.toUpperCase())+" Toolkit";
-  return {type,price,name,audience:`People actively searching for “${title}”`,promise:`A practical, focused resource that helps users act on ${title} without unnecessary research.`,deliverable:type==="resource_pack"?"Curated resource pack + checklist":"Concise guide + checklist + reusable worksheet"};
+  return {type,price,name,audience:`People actively searching for “${title}”`,promise:`A practical, focused resource that helps users act on ${title} without unnecessary research.`,deliverable:type==="template_pack"?"Original templates + instructions + checklist":"Concise guide + checklist + reusable worksheet"};
 }
 
 export async function runForge(){
@@ -66,7 +75,7 @@ export async function runDistribution(){
   for(const o of data||[]){
     const campaigns=[
       {channel:"seo",title:`${o.title}: practical guide`,hook:`Everything needed to act on ${o.title}`,cta:"Get the toolkit"},
-      {channel:"youtube",title:`${o.title} — what you need to know`,hook:`Why ${o.title} is gaining attention and what to do next`,cta:"Toolkit linked below"},
+      {channel:"youtube",title:`${o.title} — practical walkthrough`,hook:`A useful walkthrough for people searching ${o.title}`,cta:"Toolkit linked below"},
       {channel:"email",title:`Your ${o.title} resource`,hook:"Keep the useful bits and skip the noise",cta:"Open the toolkit"}
     ];
     for(const c of campaigns) await db.from("campaigns").upsert({...c,opportunity_id:o.id,status:"planned",utm_code:`me_${o.id.slice(0,8)}_${c.channel}`,metadata:{generated_by:"distribution-v1"}},{onConflict:"opportunity_id,channel"});
