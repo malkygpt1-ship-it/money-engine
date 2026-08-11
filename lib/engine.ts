@@ -1,5 +1,6 @@
 import { getServerSupabase } from "@/lib/server-supabase";
 import { generateProductAssets } from "@/lib/asset-generator";
+import { curateSkills } from "@/lib/curator";
 
 type EngineModule = "judge" | "forge" | "assets" | "distribution" | "ledger" | "curator";
 
@@ -76,13 +77,11 @@ export async function runDistribution(){
 }
 
 export async function runCurator(){
-  const db=getServerSupabase(); if(!db) throw new Error("Database unavailable");
   await event("agent.started",{agent:"curator"},"agent","curator");
-  const {data,error}=await db.from("skills").select("id,slug,version,eval_score,status").eq("status","active"); if(error) throw new Error(error.message);
-  await db.from("skills").update({last_checked_at:new Date().toISOString()}).eq("status","active");
-  const scores=(data||[]).map((s:any)=>Number(s.eval_score||0));
-  await runLog("curator","skill_health_check",null,{skills:data?.length||0,minEval:scores.length?Math.min(...scores):0});
-  await event("agent.completed",{agent:"curator",skills:data?.length||0},"agent","curator"); return {skills:data?.length||0};
+  const result=await curateSkills();
+  await runLog("curator","skill_health_check",null,result);
+  await event("agent.completed",{agent:"curator",...result},"agent","curator");
+  return result;
 }
 
 export async function runLedger(){
