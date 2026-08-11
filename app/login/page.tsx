@@ -1,0 +1,5 @@
+export const dynamic="force-dynamic";
+
+export default async function LoginPage({searchParams}:{searchParams:Promise<{next?:string,error?:string}>}){
+ const q=await searchParams; return <div style={{maxWidth:440,margin:"12vh auto"}}><div className="eyebrow">Money Engine</div><h1>Operator access</h1><p className="sub">The storefront is public. The command centre is private.</p><form action="/api/login" method="post" className="card" style={{marginTop:24}}><input type="hidden" name="next" value={q.next||"/"}/><label className="kpi-label" htmlFor="password">Admin password</label><input id="password" name="password" type="password" required autoFocus style={{display:"block",width:"100%",margin:"10px 0 14px",padding:"12px",borderRadius:10,border:"1px solid var(--line)",background:"#07111f",color:"var(--text)"}}/>{q.error?<div style={{color:"var(--danger)",fontSize:13,marginBottom:12}}>Incorrect password.</div>:null}<button className="btn primary" type="submit">Open command centre</button></form></div>;
+}
