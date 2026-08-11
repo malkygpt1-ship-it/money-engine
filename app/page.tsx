@@ -6,13 +6,30 @@ import { agents } from "@/lib/demo-data";
 import { integrations } from "@/lib/integrations";
 import { listOpportunities } from "@/lib/opportunity-store";
 import { hasPersistentStore } from "@/lib/server-supabase";
+import { getOpsStatus } from "@/lib/ops-status";
 
 export default async function Home(){
- const opportunities = await listOpportunities();
+ const [opportunities,ops] = await Promise.all([listOpportunities(),getOpsStatus()]);
  const counts = opportunities.reduce<Record<string,number>>((a,o)=>(a[o.status]=(a[o.status]||0)+1,a),{});
  const needsReview = opportunities.filter(o=>o.status==="scored" && o.score>=70).length;
+ const fmt=(value:string|null)=>value?new Date(value).toLocaleString("en-GB",{dateStyle:"medium",timeStyle:"short",timeZone:"Europe/London"}):"No activity yet";
  return <>
   <div className="topbar"><div><div className="eyebrow">Autonomous business OS</div><h1>Command centre</h1><div className="sub">Discover demand → build assets → publish → monetise → learn.</div></div><div className="badge">{hasPersistentStore()?"Persistent engine online":"Demo mode · database not connected"}</div></div>
+  <section className="ops-strip">
+    <div><small>System</small><strong className={ops.system==="LIVE"?"ok":"warn"}>{ops.system}</strong></div>
+    <div><small>Served deploy</small><strong className="ok">{ops.deployment}</strong></div>
+    <div><small>Database</small><strong className={ops.database==="CONNECTED"?"ok":"warn"}>{ops.database}</strong></div>
+    <div><small>Commit</small><strong>{ops.sha}</strong></div>
+    <div><small>Last activity</small><strong>{fmt(ops.lastActivity)}</strong></div>
+  </section>
+  <section className="card activity-card">
+    <div className="section-title"><h2>Live activity</h2><span>{ops.environment} · current served deployment</span></div>
+    <div className="activity-grid">
+      <div className="activity-current"><div className="eyebrow">Current deployment</div><strong>{ops.commitMessage}</strong><div className="meta">Commit {ops.sha}{ops.servedUrl?` · ${ops.servedUrl}`:""}</div></div>
+      <div className="activity-feed">{ops.events.length?ops.events.map(e=><div className="activity-row" key={e.id}><span className={`activity-dot ${e.severity}`}></span><div><strong>{e.type.replaceAll("_"," ")}</strong><div className="meta">{fmt(e.createdAt)}</div></div></div>):<div className="meta">No system events logged yet.</div>}</div>
+    </div>
+    <div className="meta" style={{marginTop:12}}>If a newer Vercel build is still compiling, production continues serving this READY deployment until the new one succeeds. Agent/module work appears here through system events.</div>
+  </section>
   <div className="grid kpis"><KPI label="Revenue today" value="£46.20" delta="revenue adapter next"/><KPI label="Tracked opportunities" value={String(opportunities.length)} delta="live data source"/><KPI label="Ready for review" value={String(needsReview)} delta="score ≥ 70"/><KPI label="Published assets" value={String(counts.published||0)} delta="feedback loop target"/></div>
   <div className="grid two-col">
    <div className="grid">
