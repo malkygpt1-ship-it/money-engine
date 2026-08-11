@@ -1,0 +1,1 @@
+export function KPI({label,value,delta}:{label:string;value:string;delta?:string}){return <div className="card"><div className="kpi-label">{label}</div><div className="kpi-value">{value}</div>{delta&&<div className="meta positive">{delta}</div>}</div>}
