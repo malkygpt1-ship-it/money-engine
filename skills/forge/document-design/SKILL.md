@@ -11,7 +11,7 @@ Every substantial document should have:
 - clear title and promise;
 - short orientation / how to use this;
 - logical section hierarchy;
-- scannable headings;
+- descriptive headings in a consistent order;
 - concise paragraphs;
 - examples where ambiguity is likely;
 - action steps, checklists or worksheets where relevant;
@@ -23,7 +23,9 @@ Avoid walls of text and decorative filler.
 
 Raw Markdown is a source format, not the default customer deliverable. Forge should produce a customer-ready PDF or editable document when presentation matters.
 
-Use tables only for genuinely tabular information. Use headings to communicate section structure. Do not rely on colour alone to convey meaning.
+Use tables only for genuinely tabular information. Prefer paragraphs, headings or lists when a table is being used only for visual layout. When tables are necessary, use explicit headers, simple structures and flexible widths where supported; avoid nested, merged or split data cells.
+
+Use built-in title/heading styles in editable documents when available so structure survives visual changes and assistive navigation. Do not rely on colour alone to convey meaning, and keep important customer information in the main document body rather than only in headers or footers.
 
 ## Writing standard
 
@@ -36,10 +38,10 @@ Use tables only for genuinely tabular information. Use headings to communicate s
 
 ## Visual hierarchy
 
-Use consistent title, heading, body and caption styles. Preserve generous whitespace. Keep line lengths comfortable. Ensure tables, callouts and forms do not crowd the page.
+Use consistent title, heading, body and caption styles. Preserve generous whitespace. Keep line lengths comfortable. Ensure tables, callouts and forms do not crowd the page. Check that core content remains readable on a narrow screen or at high zoom.
 
 ## Sources
 
-W3C guidance on structural headings and accessible information relationships:
-- https://www.w3.org/WAI/WCAG22/Understanding/section-headings
-- https://www.w3.org/TR/WCAG22/
+- Microsoft Word accessibility guidance: https://support.microsoft.com/en-US/accessibility/word/make-your-word-documents-accessible-to-people-with-disabilities
+- W3C WCAG 2.2 headings and labels: https://www.w3.org/WAI/WCAG22/Understanding/headings-and-labels
+- WCAG 2.2: https://www.w3.org/TR/WCAG22/
